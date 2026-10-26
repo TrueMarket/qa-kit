@@ -124,7 +124,7 @@ class QA_Kit_Toolbar {
 		?>
 <script id="qa-kit-capture">
 (function(){var e=window.__qaKitErrors=[];function p(o){if(e.length<100)e.push(o);}
-window.addEventListener('error',function(ev){var t=ev.target;if(t&&t!==window&&(t.src||t.href)){p({type:'resource',message:'Failed to load '+t.tagName.toLowerCase(),source:t.src||t.href});}else{p({type:'js',message:ev.message,source:(ev.filename||'')+':'+(ev.lineno||0)});}},true);
+window.addEventListener('error',function(ev){var t=ev.target;if(t&&t!==window&&(t.src||t.href)){p({type:'resource',message:'Failed to load '+t.tagName.toLowerCase(),source:t.src||t.href});}else if(!/^ResizeObserver loop/.test(ev.message||'')){p({type:'js',message:ev.message,source:(ev.filename||'')+':'+(ev.lineno||0)});}},true);
 window.addEventListener('unhandledrejection',function(ev){p({type:'promise',message:String(ev.reason&&ev.reason.message||ev.reason)});});
 var ce=console.error;console.error=function(){try{p({type:'console',message:Array.prototype.map.call(arguments,String).join(' ')});}catch(x){}return ce.apply(console,arguments);};})();
 </script>

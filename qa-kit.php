@@ -2,10 +2,11 @@
 /**
  * Plugin Name:       QA Kit
  * Description:       Developer QA tools for local and staging sites: front-end checks, ACF inspector, AI prompt library and a WP-CLI ACF audit. Does nothing on production.
- * Version:           0.1.1
+ * Version:           0.1.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
- * Author:            Jimmy
+ * Author:            True Market
+ * Author URI:        https://truemarket.ca
  * License:           GPL-2.0-or-later
  * Text Domain:       qa-kit
  * Update URI:        https://github.com/TrueMarket/qa-kit
@@ -13,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'QA_KIT_VERSION', '0.1.1' );
+define( 'QA_KIT_VERSION', '0.1.2' );
 define( 'QA_KIT_FILE', __FILE__ );
 define( 'QA_KIT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QA_KIT_URL', plugin_dir_url( __FILE__ ) );
