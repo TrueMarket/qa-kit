@@ -56,14 +56,14 @@
 	text-align: left;
 }
 
-header {
+.hd {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	padding: 10px 12px;
 	border-bottom: 1px solid var(--qa-border);
 }
-header strong { font-size: 15px; }
+.hd strong { font-size: 15px; }
 .ver { color: var(--qa-muted); font-size: 11px; margin-right: auto; }
 
 button {
@@ -173,14 +173,14 @@ code {
 	border-radius: 6px;
 }
 
-footer {
+.ft {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 10px 12px;
 	border-top: 1px solid var(--qa-border);
 }
-footer a { color: var(--qa-accent); }
+.ft a { color: var(--qa-accent); }
 
 /* Breakpoint preview */
 .preview {

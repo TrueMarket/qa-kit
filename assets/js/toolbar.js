@@ -71,6 +71,28 @@
 		return cs.visibility !== 'hidden' && cs.display !== 'none';
 	}
 
+	// Screen-reader-only patterns: a 1x1 box, or clipped by the element or an ancestor.
+	function visuallyHidden(el, rect, win) {
+		if (rect.width <= 1 && rect.height <= 1) return true;
+		for (var n = el; n && n.nodeType === 1; n = n.parentElement) {
+			var cs = win.getComputedStyle(n);
+			if (cs.clip && cs.clip !== 'auto') return true;
+			if (/inset\(\s*50%/.test(cs.clipPath || '')) return true;
+		}
+		return false;
+	}
+
+	function navLabel(n) {
+		var ids = (n.getAttribute('aria-labelledby') || '').trim();
+		if (ids) {
+			return ids.split(/\s+/).map(function (id) {
+				var ref = document.getElementById(id);
+				return ref ? ref.textContent : '';
+			}).join(' ').trim();
+		}
+		return (n.getAttribute('aria-label') || '').trim();
+	}
+
 	function item(level, text, detail, el, extra) {
 		var it = { level: level, text: text, detail: detail || '', el: el || null, selector: el ? selectorFor(el) : '' };
 		if (extra) for (var k in extra) it[k] = extra[k];
@@ -190,8 +212,11 @@
 		var navs = qsa('nav, [role="navigation"]');
 		if (navs.length > 1) {
 			navs.forEach(function (n) {
-				if (!n.getAttribute('aria-label') && !n.getAttribute('aria-labelledby')) {
+				var label = navLabel(n);
+				if (!label) {
 					items.push(item('warn', 'Multiple <nav> elements: this one needs an aria-label', '', n));
+				} else if (/^[\d\s]+$/.test(label)) {
+					items.push(item('warn', 'Multiple <nav> elements: label "' + label + '" does not describe this one', 'Use a name such as "Footer" or "Social links".', n));
 				}
 			});
 		}
@@ -519,9 +544,19 @@
 			if (small.length) items.push(item('warn', width + 'px: ' + small.length + ' text elements under 12px', selectorFor(small[0])));
 			var tiny = Array.prototype.filter.call(doc.body.querySelectorAll('a, button, input, select'), function (el) {
 				var r = el.getBoundingClientRect();
-				return r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24);
+				if (!(r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24))) return false;
+				// Links in running text are exempt from the target size rule (WCAG 2.5.8).
+				if (el.tagName === 'A' && el.closest('p')) return false;
+				return !visuallyHidden(el, r, f.contentWindow);
 			});
-			if (tiny.length) items.push(item('warn', width + 'px: ' + tiny.length + ' tap targets smaller than 24x24px', selectorFor(tiny[0])));
+			if (tiny.length) {
+				items.push(item('warn', width + 'px: ' + tiny.length + ' tap targets smaller than 24x24px'));
+				tiny.slice(0, 10).forEach(function (el) {
+					var r = el.getBoundingClientRect();
+					items.push(item('info', width + 'px: small tap target', Math.round(r.width) + 'x' + Math.round(r.height) + 'px', null, { selector: selectorFor(el), indent: 1 }));
+				});
+				if (tiny.length > 10) items.push(item('info', width + 'px: ' + (tiny.length - 10) + ' more small tap targets', '', null, { indent: 1 }));
+			}
 		}
 		return items;
 	}
@@ -555,13 +590,13 @@
 			'<style>.panel:not(.open){display:none}</style>' +
 			'<link rel="stylesheet" href="' + esc(D.cssUrl) + '">' +
 			'<aside class="panel" role="dialog" aria-label="QA Kit">' +
-			'<header><strong>QA Kit</strong><span class="ver">' + esc(D.version) + '</span>' +
+			'<div class="hd"><strong>QA Kit</strong><span class="ver">' + esc(D.version) + '</span>' +
 			'<button class="run-all" type="button">Run all</button>' +
-			'<button class="close" type="button" aria-label="Close QA Kit">&times;</button></header>' +
+			'<button class="close" type="button" aria-label="Close QA Kit">&times;</button></div>' +
 			'<nav class="tabs"></nav>' +
 			'<div class="body" tabindex="-1"></div>' +
-			'<footer><button class="report" type="button">Copy report for AI</button>' +
-			'<a href="' + esc(D.promptsUrl) + '">Prompt library</a></footer>' +
+			'<div class="ft"><button class="report" type="button">Copy report for AI</button>' +
+			'<a href="' + esc(D.promptsUrl) + '">Prompt library</a></div>' +
 			'</aside>';
 		panel = root.querySelector('.panel');
 		body = root.querySelector('.body');

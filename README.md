@@ -75,6 +75,45 @@ add_filter( 'qa_kit_prompt_dirs', function ( $dirs ) {
 add_filter( 'qa_kit_breakpoints', fn() => array( 360, 390, 768, 1024, 1280, 1536 ) );
 ```
 
+## Updates
+
+QA Kit uses the [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) library (bundled in `vendor/`) to check the `TrueMarket/qa-kit` GitHub repo for new tagged releases. New versions appear on the Plugins screen like any wordpress.org plugin.
+
+If the repo is private, each site needs a read-only GitHub token:
+
+1. Create a fine-grained personal access token at GitHub > Settings > Developer settings > Personal access tokens. Scope it to the `qa-kit` repo only, with **Contents: Read-only** permission.
+2. Add it to `wp-config.php`:
+   ```php
+   define( 'QA_KIT_GITHUB_TOKEN', 'github_pat_...' );
+   ```
+
+### Releasing a new version
+
+Paste this into Claude Code from the plugin folder:
+
+```
+Release a new version of this plugin.
+
+1. Work out what changed since the last release: run `git describe --tags --abbrev=0`
+   to find the latest tag, then read `git log` and `git diff` from that tag to HEAD,
+   plus any uncommitted changes. If there are no tags yet, use the whole history.
+2. Bump the version (patch bump unless I say otherwise). Update the Version header
+   and QA_KIT_VERSION in qa-kit.php, and Stable tag in readme.txt, so all three match.
+3. Add a new entry at the top of the == Changelog == section in readme.txt, using the
+   format `= X.Y.Z =` followed by `* ` bullet points. Keep it a short list of all
+   user-facing changes and group changes together where it makes sense, written in the past tense.
+4. Show me the new version number and the changelog entry, and wait for my OK
+   before committing.
+5. Commit everything with the message "Release vX.Y.Z", tag the commit vX.Y.Z,
+   and push both main and the tag to origin.
+```
+
+For a minor or major release, add "minor bump" or "major bump" to the end of the prompt.
+
+The changelog entries do more than record history. WordPress shows them in the "View version X.Y.Z details" popup on the Plugins screen, because the update checker reads the `== Changelog ==` section of `readme.txt` for the tagged release.
+
+By hand, the steps are: update the three version numbers, add the changelog entry, commit, then `git tag v0.1.1 && git push origin main && git push origin v0.1.1`.
+
 ## Notes
 
 - Front-end checks run in the browser, so nothing is sent anywhere. axe-core is bundled in `assets/vendor` (MPL-2.0).
