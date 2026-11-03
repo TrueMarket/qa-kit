@@ -1,7 +1,7 @@
 === QA Kit ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,10 @@ Developer QA tools for local and staging sites: front-end checks, ACF inspector,
 QA Kit adds developer QA tools to local and staging sites and stays inert on production. See README.md for details.
 
 == Changelog ==
+
+= 0.1.3 =
+* Changed updates to download the qa-kit.zip attached to each GitHub release instead of GitHub's source archive. Releases without a zip still fall back to the source archive.
+* Added installation instructions to the README, including a WP-CLI command that installs the latest release.
 
 = 0.1.2 =
 * Fixed the JavaScript error capture so harmless "ResizeObserver loop" browser warnings are no longer reported as errors.
