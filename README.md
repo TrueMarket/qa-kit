@@ -75,9 +75,21 @@ add_filter( 'qa_kit_prompt_dirs', function ( $dirs ) {
 add_filter( 'qa_kit_breakpoints', fn() => array( 360, 390, 768, 1024, 1280, 1536 ) );
 ```
 
+## Installing
+
+Each [GitHub release](https://github.com/TrueMarket/qa-kit/releases) has a `qa-kit.zip` attached. Use that file, not GitHub's "Download ZIP" or "Source code" links. Those name the folder `qa-kit-main` or `qa-kit-X.Y.Z`, and the site keeps that folder name through every update.
+
+- **In the dashboard:** download `qa-kit.zip` from the latest release, then go to Plugins > Add New > Upload Plugin.
+- **With WP-CLI:**
+  ```
+  wp plugin install https://github.com/TrueMarket/qa-kit/releases/latest/download/qa-kit.zip --activate
+  ```
+
+Remember to set `WP_ENVIRONMENT_TYPE` on staging (see Environments above).
+
 ## Updates
 
-QA Kit uses the [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) library (bundled in `vendor/`) to check the `TrueMarket/qa-kit` GitHub repo for new tagged releases. New versions appear on the Plugins screen like any wordpress.org plugin.
+QA Kit uses the [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) library (bundled in `vendor/`) to check the `TrueMarket/qa-kit` GitHub repo for new releases. New versions appear on the Plugins screen like any wordpress.org plugin. Updates download the `qa-kit.zip` attached to the release. If a release has no zip, the update checker falls back to GitHub's source archive.
 
 If the repo is private, each site needs a read-only GitHub token:
 
@@ -106,13 +118,46 @@ Release a new version of this plugin.
    before committing.
 5. Commit everything with the message "Release vX.Y.Z", tag the commit vX.Y.Z,
    and push both main and the tag to origin.
+6. Build the release zip from the tag:
+   `git archive --format=zip --prefix=qa-kit/ -o qa-kit.zip vX.Y.Z`
+   Check that every path in it starts with qa-kit/ and that there is no .git folder.
+7. Create the GitHub release with the zip attached, using the changelog bullets
+   as the notes:
+   `gh release create vX.Y.Z qa-kit.zip --title "vX.Y.Z" --notes-file <file with the bullets>`
+   The asset must be named exactly qa-kit.zip so the
+   releases/latest/download/qa-kit.zip link keeps working.
+8. Delete the local qa-kit.zip and any notes file, then give me the release URL.
 ```
 
 For a minor or major release, add "minor bump" or "major bump" to the end of the prompt.
 
+Steps 7 and 8 need the GitHub CLI (`gh`), installed and logged in with an account that can write to `TrueMarket/qa-kit`. See "Setting up the GitHub CLI" below.
+
 The changelog entries do more than record history. WordPress shows them in the "View version X.Y.Z details" popup on the Plugins screen, because the update checker reads the `== Changelog ==` section of `readme.txt` for the tagged release.
 
-By hand, the steps are: update the three version numbers, add the changelog entry, commit, then `git tag v0.1.1 && git push origin main && git push origin v0.1.1`.
+By hand, the steps are:
+
+1. Update the three version numbers and add the changelog entry.
+2. Commit, tag and push:
+   ```
+   git commit -am "Release vX.Y.Z"
+   git tag vX.Y.Z
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+3. Build the zip: `git archive --format=zip --prefix=qa-kit/ -o qa-kit.zip vX.Y.Z`
+4. Create the release, either with `gh release create vX.Y.Z qa-kit.zip --title "vX.Y.Z" --notes "..."`, or on GitHub: Releases > Draft a new release, choose the tag, paste the changelog bullets, and drag `qa-kit.zip` into the attachments area.
+
+### Setting up the GitHub CLI
+
+This only needs doing once per computer.
+
+1. Install it. On Windows: `winget install --id GitHub.cli`. On macOS: `brew install gh`.
+2. Restart VS Code (or your terminal) so it finds the new `gh` command.
+3. Run `gh auth login` in a terminal and choose: GitHub.com, HTTPS, "Login with a web browser". If it asks whether to authenticate Git with your GitHub credentials, yes is fine.
+4. Check it worked: `gh auth status`, then `gh repo view TrueMarket/qa-kit`.
+
+If `gh repo view` fails with a permissions error, the TrueMarket organization may need to approve the GitHub CLI: go to github.com > Settings > Applications > Authorized OAuth Apps > GitHub CLI and request or grant access for TrueMarket.
 
 ## Notes
 

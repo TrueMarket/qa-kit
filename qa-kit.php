@@ -57,10 +57,11 @@ function qa_kit_init_updater() {
 		$update_checker->setAuthentication( QA_KIT_GITHUB_TOKEN );
 	}
 
-	// If you attach a built .zip to each GitHub release (rather than letting
-	// PUC use the auto-generated source archive), uncomment the next line so
-	// updates download that asset instead:
-	// $update_checker->getVcsApi()->enableReleaseAssets( '/\.zip($|[?&#])/i' );
+	// Download the qa-kit.zip attached to each GitHub release (built with
+	// `git archive`, so it holds only committed files inside a qa-kit/ folder)
+	// instead of GitHub's auto-generated source archive. If a release has no
+	// matching .zip asset, PUC falls back to the source archive.
+	$update_checker->getVcsApi()->enableReleaseAssets( '/\.zip($|[?&#])/i' );
 }
 qa_kit_init_updater();
 
