@@ -1,7 +1,7 @@
 === QA Kit ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,10 @@ Developer QA tools for local and staging sites: front-end checks, ACF inspector,
 QA Kit adds developer QA tools to local and staging sites and stays inert on production. See https://github.com/TrueMarket/qa-kit for details.
 
 == Changelog ==
+
+= 0.1.4 =
+* Removed development files (README.md, .gitignore and .gitattributes) from the release zip.
+* Simplified the README to cover installing and releasing, and linked to the GitHub repo from readme.txt.
 
 = 0.1.3 =
 * Changed updates to download the qa-kit.zip attached to each GitHub release instead of GitHub's source archive. Releases without a zip still fall back to the source archive.
