@@ -32,6 +32,8 @@
 .qa-kit-summary .missing strong { color: #b32d2e; }
 .qa-kit-summary .unused strong { color: #996800; }
 
+.qa-kit-notes { margin: 0 0 8px 20px; list-style: disc; }
+
 .qa-kit-toggle { margin-left: 12px; }
 .qa-kit-audit.hide-used tr.status-used:not(.flagged) { display: none; }
 .qa-kit-pill {

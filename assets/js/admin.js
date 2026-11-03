@@ -1,6 +1,11 @@
-/* QA Kit admin page: copy buttons and audit filter. */
+/* QA Kit admin page: copy buttons, audit filter and confirm buttons. */
 (function () {
 	'use strict';
+
+	document.addEventListener('click', function (e) {
+		var btn = e.target.closest('[data-confirm]');
+		if (btn && !window.confirm(btn.getAttribute('data-confirm'))) e.preventDefault();
+	});
 
 	function copy(text) {
 		if (navigator.clipboard && window.isSecureContext) {

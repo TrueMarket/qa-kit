@@ -2,7 +2,8 @@
  * QA Kit front-end toolbar.
  *
  * Every check returns { items: [{ level, text, detail, el, selector, indent }] }.
- * Levels: error, warn, info, pass. The panel and the AI report both render from that shape.
+ * Levels: error, warn, info, pass. The panel and the AI report both render from that shape,
+ * after sortItems() puts the items in that order.
  */
 (function () {
 	'use strict';
@@ -112,6 +113,37 @@
 		var c = { error: 0, warn: 0, info: 0, pass: 0 };
 		items.forEach(function (i) { c[i.level]++; });
 		return c;
+	}
+
+	var RANK = { error: 0, warn: 1, info: 2, pass: 3 };
+
+	function sortBy(list, key) {
+		return list.map(function (x, i) { return { x: x, i: i, k: key(x) }; })
+			.sort(function (a, b) { return a.k - b.k || a.i - b.i; })
+			.map(function (o) { return o.x; });
+	}
+
+	// Orders items errors first, then warnings, info and passes, keeping the
+	// original order within a level. Indented rows stay under the row above them
+	// (an ACF group, a breakpoint finding) and the block ranks by its most severe
+	// row. The heading outline keeps page order at the end.
+	function sortItems(items) {
+		var blocks = [];
+		var outline = [];
+		items.forEach(function (it) {
+			if (it.outline) outline.push(it);
+			else if (it.indent && blocks.length) blocks[blocks.length - 1].children.push(it);
+			else blocks.push({ head: it, children: [] });
+		});
+		var rank = function (it) { return RANK[it.level]; };
+		var sorted = [];
+		sortBy(blocks, function (b) {
+			return Math.min.apply(null, [b.head].concat(b.children).map(rank));
+		}).forEach(function (b) {
+			sorted.push(b.head);
+			sorted.push.apply(sorted, sortBy(b.children, rank));
+		});
+		return sorted.concat(outline);
 	}
 
 	function loadScript(src) {
@@ -737,6 +769,7 @@
 			.then(function () { return CHECKS[id].run(); })
 			.catch(function (e) { return { items: [item('error', 'Check failed: ' + e.message)] }; })
 			.then(function (res) {
+				if (res && res.items) res.items = sortItems(res.items);
 				results[id] = res;
 				renderTabs();
 				if (activeTab === id || activeTab === 'summary') render();

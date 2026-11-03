@@ -95,8 +95,60 @@ class QA_Kit_Admin {
 				echo '<p><a class="button button-primary" href="' . esc_url( $audit_url ) . '">Run ACF audit</a></p>';
 			}
 			?>
+
+			<h2 id="test-page">Flexible layout test page</h2>
+			<p class="description">
+				Builds a private page on the theme's Flexible layout template with a section for every block, block option and section option, read from the template's ACF field group.
+				Options change one at a time from a baseline, so every choice appears at least once. Open the page and run the QA Kit checks to test them all at once.
+			</p>
+			<?php self::render_test_page(); ?>
 		</div>
 		<?php
+	}
+
+	private static function render_test_page() {
+		$notice = QA_Kit_Test_Page::pull_notice();
+		if ( $notice ) {
+			echo '<div class="notice notice-' . esc_attr( $notice['type'] ) . ' inline"><p>' . esc_html( $notice['message'] ) . '</p>';
+			if ( ! empty( $notice['notes'] ) ) {
+				echo '<ul class="qa-kit-notes">';
+				foreach ( $notice['notes'] as $note ) {
+					echo '<li>' . esc_html( $note ) . '</li>';
+				}
+				echo '</ul>';
+			}
+			echo '</div>';
+		}
+
+		$schema = QA_Kit_Test_Page::schema();
+		if ( is_wp_error( $schema ) ) {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html( $schema->get_error_message() ) . '</p></div>';
+			return;
+		}
+		$page    = QA_Kit_Test_Page::page();
+		$layouts = wp_list_pluck( array_values( $schema['blocks']['layouts'] ), 'label' );
+		?>
+		<p>
+			Reads the <strong><?php echo esc_html( $schema['group']['title'] ); ?></strong> field group:
+			<?php echo esc_html( count( $layouts ) . ' blocks (' . implode( ', ', $layouts ) . ')' ); ?>.
+		</p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="qa-kit-actions">
+			<input type="hidden" name="action" value="<?php echo esc_attr( QA_Kit_Test_Page::ACTION ); ?>">
+			<?php wp_nonce_field( QA_Kit_Test_Page::ACTION ); ?>
+			<button type="submit" name="qa_kit_do" value="build" class="button button-primary"><?php echo $page ? 'Rebuild test page' : 'Create test page'; ?></button>
+			<?php if ( $page ) : ?>
+				<a class="button" href="<?php echo esc_url( get_permalink( $page ) ); ?>">View</a>
+				<a class="button" href="<?php echo esc_url( get_edit_post_link( $page->ID ) ); ?>">Edit</a>
+				<button type="submit" name="qa_kit_do" value="delete" class="button button-link-delete" data-confirm="Delete the test page and its placeholder media?">Delete page and test media</button>
+			<?php endif; ?>
+		</form>
+		<?php if ( $page ) : ?>
+			<p class="description">
+				Last built <?php echo esc_html( get_the_modified_date( '', $page ) . ' ' . get_the_modified_time( '', $page ) ); ?>.
+				Rebuilding replaces any edits made to the page. Delete it before the database moves to production.
+			</p>
+			<?php
+		endif;
 	}
 
 	private static function render_audit( $result ) {

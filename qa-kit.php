@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       QA Kit
  * Description:       Developer QA tools for local and staging sites: front-end checks, ACF inspector, AI prompt library and a WP-CLI ACF audit. Does nothing on production.
- * Version:           0.1.5
+ * Version:           0.1.6
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            True Market
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'QA_KIT_VERSION', '0.1.5' );
+define( 'QA_KIT_VERSION', '0.1.6' );
 define( 'QA_KIT_FILE', __FILE__ );
 define( 'QA_KIT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QA_KIT_URL', plugin_dir_url( __FILE__ ) );
@@ -97,6 +97,16 @@ if ( ! qa_kit_is_enabled() ) {
 				return;
 			}
 			echo '<div class="notice notice-error"><p><strong>QA Kit</strong> is installed on a production site. It is disabled, but it should be removed before launch.</p></div>';
+
+			require_once QA_KIT_DIR . 'includes/class-qa-kit-test-page.php';
+			$leftovers = count( QA_Kit_Test_Page::leftovers() );
+			if ( $leftovers ) {
+				printf(
+					'<div class="notice notice-error"><p><strong>QA Kit</strong> test content is on this production site (%d items): delete the private page "%s" and the "QA Kit placeholder" media.</p></div>',
+					(int) $leftovers,
+					esc_html( QA_Kit_Test_Page::TITLE )
+				);
+			}
 		}
 	);
 	return;
@@ -107,6 +117,8 @@ require_once QA_KIT_DIR . 'includes/class-qa-kit-prompts.php';
 require_once QA_KIT_DIR . 'includes/class-qa-kit-acf-audit.php';
 require_once QA_KIT_DIR . 'includes/class-qa-kit-toolbar.php';
 require_once QA_KIT_DIR . 'includes/class-qa-kit-admin.php';
+require_once QA_KIT_DIR . 'includes/class-qa-kit-test-page.php';
 
 QA_Kit_Toolbar::init();
 QA_Kit_Admin::init();
+QA_Kit_Test_Page::init();

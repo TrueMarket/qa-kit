@@ -1,7 +1,7 @@
 === QA Kit ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,12 @@ Developer QA tools for local and staging sites: front-end checks, ACF inspector,
 QA Kit adds developer QA tools to local and staging sites and stays inert on production. See https://github.com/TrueMarket/qa-kit for details.
 
 == Changelog ==
+
+= 0.1.6 =
+* Added a Flexible layout test page to Tools > QA Kit. It builds a private page on the theme's Flexible layout template with a section for every block, block option and section option, read from the template's ACF field group. Options change one at a time from a baseline, and extra sections cover all blocks combined, empty fields and long content.
+* Added buttons to rebuild the test page and to delete it along with its placeholder images and PDF.
+* Added a warning on production sites when the test page or its placeholder media are still in the database.
+* Changed each check's results to list errors first, then warnings, info and passes, in both the panel and the AI report. Grouped rows stay together, and the heading outline keeps page order.
 
 = 0.1.5 =
 * Made the QA Kit panel resizable: drag its left edge, or focus the edge and use the arrow keys (hold Shift for bigger steps). The width is remembered between pages, and double-clicking the edge resets it.
