@@ -53,7 +53,7 @@ class QA_Kit_Admin {
 			<ol class="qa-kit-steps">
 				<li><strong>AI agent in the repo (best):</strong> open the project in your IDE and ask Claude code to: <code>Read wp-content/plugins/qa-kit/prompts/acf.md and run it</code>.</li>
 				<li><strong>Chat:</strong> click <em>Copy prompt</em>, paste into the chat, then attach or paste the template files it asks for.</li>
-				<li><strong>Page findings:</strong> on any front-end page, use <em>QA Kit &gt; Copy report for AI</em> and paste that report alongside the code.</li>
+				<li><strong>Page findings:</strong> on any front-end page, use <em>QA Kit &gt; Copy full report for AI</em> and paste that report alongside the code. To share one check only, open its tab in the QA Kit panel and click <em>Copy for AI</em>.</li>
 			</ol>
 
 			<h2>Prompt library</h2>

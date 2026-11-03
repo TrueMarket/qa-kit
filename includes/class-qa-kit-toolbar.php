@@ -91,7 +91,7 @@ class QA_Kit_Toolbar {
 			'performance' => 'Performance',
 			'errors'      => 'Errors',
 			'breakpoints' => 'Breakpoints',
-			'report'      => 'Copy report for AI',
+			'report'      => 'Copy full report for AI',
 		);
 		foreach ( $items as $id => $title ) {
 			$bar->add_node(

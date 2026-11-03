@@ -1,7 +1,7 @@
 === QA Kit ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,12 @@ Developer QA tools for local and staging sites: front-end checks, ACF inspector,
 QA Kit adds developer QA tools to local and staging sites and stays inert on production. See https://github.com/TrueMarket/qa-kit for details.
 
 == Changelog ==
+
+= 0.1.5 =
+* Made the QA Kit panel resizable: drag its left edge, or focus the edge and use the arrow keys (hold Shift for bigger steps). The width is remembered between pages, and double-clicking the edge resets it.
+* Added a Copy for AI button to each check's tab that copies a report for that check only, running the check first if it has no results yet.
+* Renamed "Copy report for AI" to "Copy full report for AI" in the panel and the admin bar menu.
+* Changed the fallback for when copying is blocked to show the report text in the current tab instead of switching to Summary.
 
 = 0.1.4 =
 * Removed development files (README.md, .gitignore and .gitattributes) from the release zip.

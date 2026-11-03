@@ -15,6 +15,11 @@
 	var state = { items: [] };
 	var root, panel, body, tabsEl, activeTab = 'summary';
 
+	// Panel width in px. DEFAULT_WIDTH matches .panel in toolbar.css.
+	var MIN_WIDTH = 320;
+	var DEFAULT_WIDTH = 460;
+	var WIDTH_KEY = 'qaKitPanelWidth';
+
 	var CHECKS = {
 		a11y: { label: 'Accessibility', run: checkA11y },
 		structure: { label: 'Structure', run: checkStructure },
@@ -590,12 +595,13 @@
 			'<style>.panel:not(.open){display:none}</style>' +
 			'<link rel="stylesheet" href="' + esc(D.cssUrl) + '">' +
 			'<aside class="panel" role="dialog" aria-label="QA Kit">' +
+			'<div class="resize" role="separator" aria-orientation="vertical" aria-label="Resize QA Kit panel" aria-valuemin="' + MIN_WIDTH + '" tabindex="0" title="Drag to resize. Double-click to reset."></div>' +
 			'<div class="hd"><strong>QA Kit</strong><span class="ver">' + esc(D.version) + '</span>' +
 			'<button class="run-all" type="button">Run all</button>' +
 			'<button class="close" type="button" aria-label="Close QA Kit">&times;</button></div>' +
 			'<nav class="tabs"></nav>' +
 			'<div class="body" tabindex="-1"></div>' +
-			'<div class="ft"><button class="report" type="button">Copy report for AI</button>' +
+			'<div class="ft"><button class="report" type="button">Copy full report for AI</button>' +
 			'<a href="' + esc(D.promptsUrl) + '">Prompt library</a></div>' +
 			'</aside>';
 		panel = root.querySelector('.panel');
@@ -603,9 +609,79 @@
 		tabsEl = root.querySelector('.tabs');
 		root.querySelector('.close').addEventListener('click', close);
 		root.querySelector('.run-all').addEventListener('click', function () { runAll(); });
-		root.querySelector('.report').addEventListener('click', copyReport);
+		root.querySelector('.report').addEventListener('click', copyFullReport);
 		renderTabs();
 		body.addEventListener('click', onBodyClick);
+		initResize();
+	}
+
+	/* Panel width: drag the left edge, or focus it and use the arrow keys. */
+
+	function setWidth(w) {
+		var max = document.documentElement.clientWidth;
+		w = Math.round(Math.max(MIN_WIDTH, Math.min(w, max)));
+		panel.style.width = w + 'px';
+		var handle = root.querySelector('.resize');
+		handle.setAttribute('aria-valuenow', w);
+		handle.setAttribute('aria-valuemax', max);
+		return w;
+	}
+
+	// 0 clears the saved width. Storage can throw when blocked, which just means it is not remembered.
+	function saveWidth(w) {
+		try {
+			if (w) localStorage.setItem(WIDTH_KEY, String(w));
+			else localStorage.removeItem(WIDTH_KEY);
+		} catch (e) { /* ignore */ }
+	}
+
+	function initResize() {
+		var handle = root.querySelector('.resize');
+		var saved = 0;
+		try { saved = parseInt(localStorage.getItem(WIDTH_KEY), 10) || 0; } catch (e) { /* ignore */ }
+		setWidth(saved || DEFAULT_WIDTH);
+
+		handle.addEventListener('pointerdown', function (e) {
+			if (e.button !== 0) return;
+			e.preventDefault();
+			var startX = e.clientX;
+			var startW = panel.offsetWidth;
+			var width = startW;
+			var html = document.documentElement;
+			var userSelect = html.style.userSelect;
+			html.style.userSelect = 'none';
+			handle.setPointerCapture(e.pointerId);
+			handle.classList.add('dragging');
+
+			function move(ev) {
+				// The handle is on the left edge, so moving left makes the panel wider.
+				width = setWidth(startW + startX - ev.clientX);
+			}
+			function end() {
+				handle.removeEventListener('pointermove', move);
+				handle.removeEventListener('pointerup', end);
+				handle.removeEventListener('pointercancel', end);
+				handle.classList.remove('dragging');
+				html.style.userSelect = userSelect;
+				if (width !== startW) saveWidth(width);
+			}
+			handle.addEventListener('pointermove', move);
+			handle.addEventListener('pointerup', end);
+			handle.addEventListener('pointercancel', end);
+		});
+
+		handle.addEventListener('keydown', function (e) {
+			var step = e.shiftKey ? 100 : 20;
+			if (e.key === 'ArrowLeft') saveWidth(setWidth(panel.offsetWidth + step));
+			else if (e.key === 'ArrowRight') saveWidth(setWidth(panel.offsetWidth - step));
+			else return;
+			e.preventDefault();
+		});
+
+		handle.addEventListener('dblclick', function () {
+			setWidth(DEFAULT_WIDTH);
+			saveWidth(0);
+		});
 	}
 
 	function open(tab) {
@@ -681,6 +757,7 @@
 			'<button type="button" class="rerun" data-rerun="' + activeTab + '">Re-run</button>';
 		if (activeTab === 'structure') html += '<button type="button" class="outline-toggle">Label headings on page</button>';
 		if (activeTab === 'breakpoints') html += '<button type="button" class="preview-open">Open preview</button>';
+		html += '<button type="button" class="copy-tab"' + (!res || res.running ? ' disabled' : '') + '>Copy for AI</button>';
 		html += '</div>';
 		if (!res || res.running) {
 			html += '<p class="muted">Running&hellip;</p>';
@@ -734,6 +811,8 @@
 		if (rerun) return runCheck(rerun.getAttribute('data-rerun'));
 		if (t.closest('.outline-toggle')) return toggleOutline();
 		if (t.closest('.preview-open')) return openPreview();
+		var copyBtn = t.closest('.copy-tab');
+		if (copyBtn) return copyReport([activeTab], copyBtn, 'Copy for AI');
 		var row = t.closest('tr[data-tab]');
 		if (row) return show(row.getAttribute('data-tab'));
 		var li = t.closest('.item.clickable');
@@ -814,9 +893,11 @@
 	/* AI report                                                           */
 	/* ------------------------------------------------------------------ */
 
-	function buildReport() {
+	// ids: the checks to include. One id gives a report scoped to that tab.
+	function buildReport(ids) {
+		var scoped = ids.length === 1 ? CHECKS[ids[0]].label : '';
 		var lines = [];
-		lines.push('# QA Kit report');
+		lines.push('# QA Kit report' + (scoped ? ': ' + scoped : ''));
 		lines.push('');
 		lines.push('- URL: ' + location.href);
 		lines.push('- Page: ' + D.page.object);
@@ -828,7 +909,7 @@
 		lines.push('## Theme files that rendered this page');
 		D.page.files.forEach(function (f) { lines.push('- `' + f + '`'); });
 
-		Object.keys(CHECKS).forEach(function (id) {
+		ids.forEach(function (id) {
 			var r = results[id];
 			if (!r || !r.items) return;
 			var c = counts(r.items);
@@ -856,7 +937,9 @@
 		lines.push('');
 		lines.push('---');
 		lines.push('');
-		lines.push('You are reviewing automated QA findings for the WordPress page above. The theme files that rendered it are listed.');
+		lines.push(scoped
+			? 'You are reviewing the ' + scoped + ' findings from an automated QA run on the WordPress page above. Other checks are not included. The theme files that rendered the page are listed.'
+			: 'You are reviewing automated QA findings for the WordPress page above. The theme files that rendered it are listed.');
 		lines.push('');
 		lines.push('1. For each error and warning, find the likely cause in those files (or name the plugin responsible) and give a specific fix with the file and code change.');
 		lines.push('2. Mark anything that is expected on a ' + D.env + ' site, or is a false positive, and say why.');
@@ -865,23 +948,28 @@
 		return lines.join('\n');
 	}
 
-	function copyReport() {
-		var missing = Object.keys(CHECKS).filter(function (id) { return !results[id] || results[id].running; });
-		var btn = root.querySelector('.report');
-		btn.textContent = 'Running checks…';
-		var ready = missing.length ? runAll() : Promise.resolve();
+	function copyFullReport() {
+		return copyReport(Object.keys(CHECKS), root.querySelector('.report'), 'Copy full report for AI');
+	}
+
+	// Runs any of the checks that have no results yet, then copies their report.
+	function copyReport(ids, btn, label) {
+		var missing = ids.filter(function (id) { return !results[id] || results[id].running; });
+		var ready = Promise.resolve();
+		if (missing.length) {
+			btn.textContent = 'Running checks…';
+			ready = ids.length > 1 ? runAll() : runCheck(ids[0]);
+		}
 		return ready.then(function () {
-			var report = buildReport();
+			var report = buildReport(ids);
 			return copyText(report).then(function () {
 				btn.textContent = 'Copied!';
 			}, function () {
 				btn.textContent = 'Copy failed: select the text below';
-				activeTab = 'summary';
-				renderSummary();
-				body.insertAdjacentHTML('beforeend', '<textarea class="report-text" readonly>' + esc(report) + '</textarea>');
+				body.querySelector('.tab-head').insertAdjacentHTML('afterend', '<textarea class="report-text" readonly>' + esc(report) + '</textarea>');
 			});
 		}).then(function () {
-			setTimeout(function () { btn.textContent = 'Copy report for AI'; }, 2500);
+			setTimeout(function () { btn.textContent = label; }, 2500);
 		});
 	}
 
@@ -898,7 +986,7 @@
 		var id = href.replace('#qa-kit', '').replace(/^-/, '');
 		if (!id) return panel && panel.classList.contains('open') ? close() : open();
 		if (id === 'all') return runAll();
-		if (id === 'report') { open('summary'); return copyReport(); }
+		if (id === 'report') { open('summary'); return copyFullReport(); }
 		if (id === 'breakpoints') { open('breakpoints'); return; }
 		open(id);
 	});
