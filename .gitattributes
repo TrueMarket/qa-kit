@@ -3,3 +3,8 @@
 # platform's native endings, so line-ending differences never show up as
 # changes again. Binary files are auto-detected and left untouched.
 * text=auto
+
+# Keep development files out of the release zip built with `git archive`.
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/README.md      export-ignore

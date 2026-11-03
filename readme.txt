@@ -9,7 +9,7 @@ Developer QA tools for local and staging sites: front-end checks, ACF inspector,
 
 == Description ==
 
-QA Kit adds developer QA tools to local and staging sites and stays inert on production. See README.md for details.
+QA Kit adds developer QA tools to local and staging sites and stays inert on production. See https://github.com/TrueMarket/qa-kit for details.
 
 == Changelog ==
 
